@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catatan Keuangan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h2 class="text-center">Catatan Keuangan</h2>
+      <h4 class="text-center">Saldo Akhir: <span id="balance">Rp 0</span></h4>
+      <form id="finance-form" class="mb-3">
+        <div class="row">
+          <div class="col-md-4">
+            <select id="description" class="form-control custom-select" required>
+              <option value="Gaji">Gaji</option>
+              <option value="Bonus">Bonus</option>
+              <option value="Ke Orang Tua">Ke Orang Tua</option>
+              <option value="Belanja">Belanja</option>
+              <option value="Transportasi">Transportasi</option>
+              <option value="Makan">Makan</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <input type="text" id="amount" class="form-control" placeholder="Rp 0" required />
+          </div>
+          <div class="col-md-3">
+            <select id="type" class="form-control custom-select" required>
+              <option value="income">Pemasukan</option>
+              <option value="expense">Pengeluaran</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Tambah</button>
+          </div>
+        </div>
+      </form>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Deskripsi</th>
+            <th>Jumlah</th>
+            <th>Tipe</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="finance-list"></tbody>
+      </table>
+    </div>
+    <script>
+      let transactions = [];
+      let editIndex = -1;
+
+      document.getElementById('amount').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/[^0-9]/g, '');
+        if (value) {
+          e.target.value = 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+        } else {
+          e.target.value = '';
+        }
+      });
+
+      document.getElementById('finance-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        let description = document.getElementById('description').value;
+        let amount = parseInt(document.getElementById('amount').value.replace(/\D/g, ''));
+        let type = document.getElementById('type').value;
+
+        if (editIndex === -1) {
+          transactions.push({ description, amount, type });
+        } else {
+          transactions[editIndex] = { description, amount, type };
+          editIndex = -1;
+        }
+
+        updateTable();
+        document.getElementById('finance-form').reset();
+      });
+
+      function updateTable() {
+        let tableBody = document.getElementById('finance-list');
+        tableBody.innerHTML = '';
+        transactions.forEach((transaction, index) => {
+          let formattedAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(transaction.amount);
+          let row = `<tr>
+                  <td>${transaction.description}</td>
+                  <td>${formattedAmount}</td>
+                  <td>${transaction.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}</td>
+                  <td>
+                      <button class="btn btn-warning btn-sm" onclick="editTransaction(${index})">Edit</button>
+                      <button class="btn btn-danger btn-sm" onclick="deleteTransaction(${index})">Hapus</button>
+                  </td>
+              </tr>`;
+          tableBody.innerHTML += row;
+        });
+        updateBalance();
+      }
+
+      function updateBalance() {
+        let balance = transactions.reduce((total, transaction) => (transaction.type === 'income' ? total + transaction.amount : total - transaction.amount), 0);
+        document.getElementById('balance').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(balance);
+      }
+
+      function deleteTransaction(index) {
+        transactions.splice(index, 1);
+        updateTable();
+      }
+
+      function editTransaction(index) {
+        let transaction = transactions[index];
+        document.getElementById('description').value = transaction.description;
+        document.getElementById('amount').value = 'Rp ' + new Intl.NumberFormat('id-ID').format(transaction.amount);
+        document.getElementById('type').value = transaction.type;
+        editIndex = index;
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
