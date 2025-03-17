@@ -24,22 +24,7 @@
             </select>
           </div>
           <div class="col-md-3">
-            <select id="amount" class="form-control custom-select" required>
-              <option value="50000">Rp 50.000</option>
-              <option value="100000">Rp 100.000</option>
-              <option value="150000">Rp 150.000</option>
-              <option value="200000">Rp 200.000</option>
-              <option value="250000">Rp 250.000</option>
-              <option value="300000">Rp 300.000</option>
-              <option value="500000">Rp 500.000</option>
-              <option value="1000000">Rp 1.000.000</option>
-              <option value="1500000">Rp 1.500.000</option>
-              <option value="2000000">Rp 2.000.000</option>
-              <option value="2500000">Rp 2.500.000</option>
-              <option value="3500000">Rp 3.500.000</option>
-              <option value="4000000">Rp 4.000.000</option>
-              <option value="5000000">Rp 5.000.000</option>
-            </select>
+            <input type="text" id="amount" class="form-control" placeholder="Rp 0" required />
           </div>
           <div class="col-md-3">
             <select id="type" class="form-control custom-select" required>
@@ -66,15 +51,32 @@
     </div>
     <script>
       let transactions = [];
+      let editIndex = -1;
+
+      document.getElementById('amount').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/[^0-9]/g, '');
+        if (value) {
+          e.target.value = 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+        } else {
+          e.target.value = '';
+        }
+      });
 
       document.getElementById('finance-form').addEventListener('submit', function (e) {
         e.preventDefault();
         let description = document.getElementById('description').value;
-        let amount = document.getElementById('amount').value;
+        let amount = parseInt(document.getElementById('amount').value.replace(/\D/g, ''));
         let type = document.getElementById('type').value;
-        let transaction = { description, amount: parseFloat(amount), type };
-        transactions.push(transaction);
+
+        if (editIndex === -1) {
+          transactions.push({ description, amount, type });
+        } else {
+          transactions[editIndex] = { description, amount, type };
+          editIndex = -1;
+        }
+
         updateTable();
+        document.getElementById('finance-form').reset();
       });
 
       function updateTable() {
@@ -83,28 +85,21 @@
         transactions.forEach((transaction, index) => {
           let formattedAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(transaction.amount);
           let row = `<tr>
-                    <td>${transaction.description}</td>
-                    <td>${formattedAmount}</td>
-                    <td>${transaction.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm" onclick="editTransaction(${index})">Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteTransaction(${index})">Hapus</button>
-                    </td>
-                </tr>`;
+                  <td>${transaction.description}</td>
+                  <td>${formattedAmount}</td>
+                  <td>${transaction.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}</td>
+                  <td>
+                      <button class="btn btn-warning btn-sm" onclick="editTransaction(${index})">Edit</button>
+                      <button class="btn btn-danger btn-sm" onclick="deleteTransaction(${index})">Hapus</button>
+                  </td>
+              </tr>`;
           tableBody.innerHTML += row;
         });
         updateBalance();
       }
 
       function updateBalance() {
-        let balance = 0;
-        transactions.forEach((transaction) => {
-          if (transaction.type === 'income') {
-            balance += transaction.amount;
-          } else {
-            balance -= transaction.amount;
-          }
-        });
+        let balance = transactions.reduce((total, transaction) => (transaction.type === 'income' ? total + transaction.amount : total - transaction.amount), 0);
         document.getElementById('balance').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(balance);
       }
 
@@ -116,9 +111,9 @@
       function editTransaction(index) {
         let transaction = transactions[index];
         document.getElementById('description').value = transaction.description;
-        document.getElementById('amount').value = transaction.amount;
+        document.getElementById('amount').value = 'Rp ' + new Intl.NumberFormat('id-ID').format(transaction.amount);
         document.getElementById('type').value = transaction.type;
-        deleteTransaction(index);
+        editIndex = index;
       }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
