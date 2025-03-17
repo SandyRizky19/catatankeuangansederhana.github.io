@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catatan Keuangan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h2 class="text-center">Catatan Keuangan</h2>
+      <h4 class="text-center">Saldo Akhir: <span id="balance">Rp 0</span></h4>
+      <form id="finance-form" class="mb-3">
+        <div class="row">
+          <div class="col-md-4">
+            <select id="description" class="form-control custom-select" required>
+              <option value="Gaji">Gaji</option>
+              <option value="Bonus">Bonus</option>
+              <option value="Ke Orang Tua">Ke Orang Tua</option>
+              <option value="Belanja">Belanja</option>
+              <option value="Transportasi">Transportasi</option>
+              <option value="Makan">Makan</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select id="amount" class="form-control custom-select" required>
+              <option value="50000">Rp 50.000</option>
+              <option value="100000">Rp 100.000</option>
+              <option value="150000">Rp 150.000</option>
+              <option value="200000">Rp 200.000</option>
+              <option value="250000">Rp 250.000</option>
+              <option value="300000">Rp 300.000</option>
+              <option value="500000">Rp 500.000</option>
+              <option value="1000000">Rp 1.000.000</option>
+              <option value="1500000">Rp 1.500.000</option>
+              <option value="2000000">Rp 2.000.000</option>
+              <option value="2500000">Rp 2.500.000</option>
+              <option value="3500000">Rp 3.500.000</option>
+              <option value="4000000">Rp 4.000.000</option>
+              <option value="5000000">Rp 5.000.000</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select id="type" class="form-control custom-select" required>
+              <option value="income">Pemasukan</option>
+              <option value="expense">Pengeluaran</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Tambah</button>
+          </div>
+        </div>
+      </form>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Deskripsi</th>
+            <th>Jumlah</th>
+            <th>Tipe</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="finance-list"></tbody>
+      </table>
+    </div>
+    <script>
+      let transactions = [];
+
+      document.getElementById('finance-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        let description = document.getElementById('description').value;
+        let amount = document.getElementById('amount').value;
+        let type = document.getElementById('type').value;
+        let transaction = { description, amount: parseFloat(amount), type };
+        transactions.push(transaction);
+        updateTable();
+      });
+
+      function updateTable() {
+        let tableBody = document.getElementById('finance-list');
+        tableBody.innerHTML = '';
+        transactions.forEach((transaction, index) => {
+          let formattedAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(transaction.amount);
+          let row = `<tr>
+                    <td>${transaction.description}</td>
+                    <td>${formattedAmount}</td>
+                    <td>${transaction.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editTransaction(${index})">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteTransaction(${index})">Hapus</button>
+                    </td>
+                </tr>`;
+          tableBody.innerHTML += row;
+        });
+        updateBalance();
+      }
+
+      function updateBalance() {
+        let balance = 0;
+        transactions.forEach((transaction) => {
+          if (transaction.type === 'income') {
+            balance += transaction.amount;
+          } else {
+            balance -= transaction.amount;
+          }
+        });
+        document.getElementById('balance').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(balance);
+      }
+
+      function deleteTransaction(index) {
+        transactions.splice(index, 1);
+        updateTable();
+      }
+
+      function editTransaction(index) {
+        let transaction = transactions[index];
+        document.getElementById('description').value = transaction.description;
+        document.getElementById('amount').value = transaction.amount;
+        document.getElementById('type').value = transaction.type;
+        deleteTransaction(index);
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
